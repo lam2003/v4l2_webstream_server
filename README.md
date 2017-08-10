@@ -1,0 +1,3 @@
+# v4l2_webstream_server
+基于live555框架实现的v4l2网络监控
+实现v4l2摄像头采集直播
