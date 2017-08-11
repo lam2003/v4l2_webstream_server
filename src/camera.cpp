@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "Camera.h"
 
 using namespace v4l2;
 
@@ -42,7 +42,7 @@ bool Camera::initDev(const char *devName, int width, int height)
     fmt.fmt.pix.width = width;
     fmt.fmt.pix.height = height;
     fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
-    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+    fmt.fmt.pix.pixelformat = CAMERA_FMT;
 
     if (ioctl(fd, VIDIOC_S_FMT, &fmt) == -1)
     {
@@ -180,7 +180,7 @@ bool Camera::readFrame(AVPicture &picDest,AVPixelFormat picFmt,int picWidth,int 
     picSrc.linesize[0] = bytesPerLine;
     for(int i = 1; i < 8; i++)
         picSrc.linesize[i] = 0;
-    swsCtx = sws_getContext(width,height,AV_PIX_FMT_YUYV422,picWidth,picHeight,picFmt,SWS_BICUBIC,0,0,0);
+    swsCtx = sws_getContext(width,height,(AVPixelFormat)CAMERA_FMT,picWidth,picHeight,picFmt,SWS_BICUBIC,0,0,0);
     int rs = sws_scale(swsCtx, picSrc.data, picSrc.linesize, 0,
 			height, picDest.data, picDest.linesize);
     if(rs == -1)

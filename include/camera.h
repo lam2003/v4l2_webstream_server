@@ -24,6 +24,14 @@ extern "C"
 #include <libswscale/swscale.h>
 #include <libavutil/pixfmt.h>
 }
+
+
+#include <liveMedia/UsageEnvironment.hh>  
+#include <liveMedia/FramedSource.hh>
+
+#include "H264Encoder.h"
+#include "Config.h"
+
 namespace v4l2
 {
     struct buffer
@@ -31,6 +39,7 @@ namespace v4l2
         void *start;
         unsigned int len;
     };
+
     class Camera
     {
     public:
@@ -52,6 +61,21 @@ namespace v4l2
         buffer *buffers;
         int bufferCount;
         int bytesPerLine;
+    };
+
+    class CameraFramedSource : public FramedSource
+    {
+    public:
+        CameraFramedSource(UsageEnvironment &env);
+        ~CameraFramedSource();
+        void doGetNextFrame();
+    private:
+  
+        Camera *camera;
+        h264::H264Encoder *encoder;
+        AVPicture picture;
+        void *mp_token;
+        static int nalIndex;
     };
 }
 #endif
