@@ -12,7 +12,7 @@ extern "C"
 }
 #include "Config.h"
 
-namespace h264{
+
 
 class H264Encoder{
 public:
@@ -20,6 +20,7 @@ public:
     ~H264Encoder();
     void x264Init(AVPicture picture,int width,int height);
     void x264Encode();
+    
     x264_nal_t *nals;
     int nnal;
 private:
@@ -29,6 +30,6 @@ private:
     int64_t i_pts;
     x264_picture_t *picOut;
 };
-}
+
 
 #endif 

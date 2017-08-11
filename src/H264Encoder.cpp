@@ -1,6 +1,5 @@
 #include "H264Encoder.h"
 
-using namespace h264;
 
 H264Encoder::H264Encoder()
 {
