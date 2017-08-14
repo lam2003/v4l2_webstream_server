@@ -156,19 +156,20 @@ Camera::~Camera()
     free(buffers);
     close(fd);
 }
-static unsigned char *temp;
-static unsigned int  nread;
+//static unsigned char *temp;
+//static unsigned int  nread;
+/*
 static int fill_iobuffer(void *buffer, uint8_t *iobuf, int bufsize)
 {
     if(nread <= 0)
-        return 0;
+        return bufsize;
     if(nread < bufsize)
     {
         for(int i = 0; i < nread; i++)
             iobuf[i] = temp[i];
         temp += nread;
         nread = 0;
-        return nread;
+        return bufsize;
     }
     for(int i = 0 ;i < bufsize;i++)
          iobuf[i] = temp[i];    
@@ -178,7 +179,14 @@ static int fill_iobuffer(void *buffer, uint8_t *iobuf, int bufsize)
    
     return bufsize;
 }
-
+*/
+void save(void *start,int len)
+{
+    int fd;
+    fd = open("temp.jpg",O_RDWR|O_CREAT,0777);
+    write(fd,start,len);
+    close(fd);
+}
 
 bool Camera::readFrame(AVPicture &picDest, AVPixelFormat picFmt, int picWidth, int picHeight)
 {
@@ -193,20 +201,21 @@ bool Camera::readFrame(AVPicture &picDest, AVPixelFormat picFmt, int picWidth, i
     }
    
     AVFormatContext *pFormatCtx = NULL;
-    AVIOContext *pIOCtx = NULL;
+  //  AVIOContext *pIOCtx = NULL;
     SwsContext *img_convert_ctx = NULL;
     unsigned char *iobuffer;
     int err;
-    
-    iobuffer = (unsigned char *)malloc(buffers[buf.index].len);
-    temp = (unsigned char *)buffers[buf.index].start;
-    nread = buffers[buf.index].len;
-
+        av_register_all();
+  //  iobuffer = (unsigned char *)malloc(buffers[buf.index].len);
+  //  temp = (unsigned char *)buffers[buf.index].start;
+ //   nread = buffers[buf.index].len;
+    save(buffers[buf.index].start,buffers[buf.index].len);
     pFormatCtx = avformat_alloc_context();
-    pIOCtx = avio_alloc_context(iobuffer, 32768, 0 ,NULL, fill_iobuffer, NULL, NULL);
-    pFormatCtx->pb = pIOCtx;
+  //  pIOCtx = avio_alloc_context(iobuffer, 1024, 0 ,NULL, fill_iobuffer, NULL, NULL);
+  //  pFormatCtx->pb = pIOCtx;
   
-    err = avformat_open_input(&pFormatCtx, NULL, NULL, NULL);
+    AVInputFormat *inputFmt = av_find_input_format ("temp.jpg");    
+    err = avformat_open_input(&pFormatCtx, "temp.jpg",inputFmt, NULL);
     if (err < 0)
     {
         printf("Camera::readFrame can't not open this file\n");
@@ -220,11 +229,8 @@ bool Camera::readFrame(AVPicture &picDest, AVPixelFormat picFmt, int picWidth, i
    
     avformat_find_stream_info(pFormatCtx, NULL);
 
-#ifdef DEBUG
-    printf("picture width   =  %d \n", pCodecCtx->width);
-    printf("picture height  =  %d \n", pCodecCtx->height);
-    printf("Pixel   Format  =  %d \n", pCodecCtx->pix_fmt);
-#endif
+
+
 
     int videoindex = -1;
     for (int i = 0; i < pFormatCtx->nb_streams; i++)
@@ -235,7 +241,16 @@ bool Camera::readFrame(AVPicture &picDest, AVPixelFormat picFmt, int picWidth, i
         }
     AVCodecContext *pCodecCtx = pFormatCtx->streams[videoindex]->codec;
     AVCodec *pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
-
+    
+    printf("picture width   =  %d \n", pCodecCtx->width);
+    printf("picture height  =  %d \n", pCodecCtx->height);
+    printf("Pixel   Format  =  %d \n", pCodecCtx->pix_fmt);
+    if(pCodec == NULL)
+    {
+        printf("NULL\n\n");
+        return false;
+    }
+    avcodec_open2(pCodecCtx, pCodec,NULL);
     int got_picture;
     AVFrame *pFrame;
     AVPacket *pPacket;
@@ -245,6 +260,7 @@ bool Camera::readFrame(AVPicture &picDest, AVPixelFormat picFmt, int picWidth, i
     av_read_frame(pFormatCtx, pPacket);
     if (pPacket->stream_index == videoindex)
         err = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPacket);
+
     if (err < 0)
     {
         printf("Camera::readFrame decode error\n");
@@ -259,7 +275,7 @@ bool Camera::readFrame(AVPicture &picDest, AVPixelFormat picFmt, int picWidth, i
 
     av_packet_free(&pPacket);
     av_frame_free(&pFrame);
-    free(iobuffer);
+    //free(iobuffer);
     avformat_free_context(pFormatCtx);
 
     if (ioctl(fd, VIDIOC_QBUF, &buf) == -1) //放回缓存
