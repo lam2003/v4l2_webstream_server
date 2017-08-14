@@ -1,7 +1,4 @@
 
-#include <liveMedia/liveMedia.hh>
-#include <liveMedia/BasicUsageEnvironment.hh>
-#include <liveMedia/UsageEnvironment.hh>
 #include "Main.h"
 
 UsageEnvironment *env;

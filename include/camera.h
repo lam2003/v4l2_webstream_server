@@ -47,7 +47,6 @@ class Camera
     int getHeight();
     bool startStream();
     bool stopStream();
-
   private:
     int fd;
     int width;
@@ -55,6 +54,8 @@ class Camera
     buffer *buffers;
     int bufferCount;
     int bytesPerLine;
+  
+
 };
 
 
